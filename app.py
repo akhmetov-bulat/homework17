@@ -95,5 +95,15 @@ class MovieView(Resource):
         return movies_list, 200
 
 
+@movie_ns.route('/<int:mid>')
+class MovieView(Resource):
+    def get(self, mid):
+        movie = db.session.query(Movie).get(mid)
+        if movie:
+            movie_json = movie_schema.dump(movie)
+            return movie_json, 200
+        return '', 404
+
+
 if __name__ == '__main__':
     app.run(debug=True)
