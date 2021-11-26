@@ -79,11 +79,20 @@ class GenreSchema(Schema):
     name = fields.Str()
 
 
-
-
-
-
-
+@movie_ns.route('/')
+class MovieView(Resource):
+    def get(self):
+        req =request.args
+        page = int(req.get('page', 1))
+        limit = req.get('limit', 10)
+        offset = (page-1)*limit
+        if 'director_id' in req.keys():
+            print("director")
+        if 'genre_id' in req.keys():
+            print("genre")
+        movies = db.session.query(Movie).limit(limit).offset(offset).all()
+        movies_list = movies_schema.dump(movies)
+        return movies_list, 200
 
 
 if __name__ == '__main__':
