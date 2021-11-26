@@ -84,24 +84,59 @@ class MovieView(Resource):
     def get(self):
         req =request.args
         page = int(req.get('page', 1))
-        limit = req.get('limit', 10)
+        limit = int(req.get('limit', 10))
         offset = (page-1)*limit
-        if 'director_id' in req.keys():
-            print("director")
-        if 'genre_id' in req.keys():
-            print("genre")
-        movies = db.session.query(Movie).limit(limit).offset(offset).all()
+        if all (key in req.keys() for key in ("director_id","genre_id")):
+            try:
+                director_id = int(req.get('director_id'))
+                genre_id = int(req.get('genre_id'))
+                movies = db.session.query(Movie).filter(Movie.director_id==director_id, Movie.genre_id==genre_id).all()
+            except:
+                return "", 404
+        elif 'director_id' in req.keys():
+            try:
+                director_id = int(req.get('director_id'))
+                movies = db.session.query(Movie).filter(Movie.director_id==director_id).all()
+            except:
+                return "", 404
+        elif 'genre_id' in req.keys():
+            try:
+                genre_id = int(req.get('genre_id'))
+                movies = db.session.query(Movie).filter(Movie.genre_id==genre_id).all()
+            except:
+                return "", 404
+        else:
+            movies = db.session.query(Movie).limit(limit).offset(offset).all()
         movies_list = movies_schema.dump(movies)
         return movies_list, 200
 
 
-@movie_ns.route('/<int:mid>')
+@movie_ns.route('/<int:id>')
 class MovieView(Resource):
-    def get(self, mid):
-        movie = db.session.query(Movie).get(mid)
+    def get(self, id):
+        movie = db.session.query(Movie).get(id)
         if movie:
             movie_json = movie_schema.dump(movie)
             return movie_json, 200
+        return '', 404
+
+
+@director_ns.route('/')
+class DirectorView(Resource):
+    def get(self):
+        req =request.args
+        directors = db.session.query(Director).all()
+        directors_list = directors_schema.dump(directors)
+        return directors_list, 200
+
+
+@movie_ns.route('/<int:id>')
+class MovieView(Resource):
+    def get(self, id):
+        director = db.session.query(Director).get(id)
+        if director:
+            director_json = director_schema.dump(director)
+            return director_json, 200
         return '', 404
 
 
