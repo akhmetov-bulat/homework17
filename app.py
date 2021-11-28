@@ -86,6 +86,7 @@ class MovieView(Resource):
         page = int(req.get('page', 1))
         limit = int(req.get('limit', 10))
         offset = (page-1)*limit
+
         if all (key in req.keys() for key in ("director_id","genre_id")):
             try:
                 director_id = int(req.get('director_id'))
@@ -108,7 +109,17 @@ class MovieView(Resource):
         else:
             movies = db.session.query(Movie).limit(limit).offset(offset).all()
         movies_list = movies_schema.dump(movies)
-        return movies_list, 200
+        total_pages = db.session.query(Movie).count()
+        data_body = {
+                      "data": movies_list,
+                      "pagination": {
+                                   "current_page": page,
+                                   "total_pages": total_pages,
+                                   "items_per_page": limit
+                                  }
+                      }
+        return data_body, 200
+        # return movies_list, 200
 
     def post(self):
         movie_json = request.json
